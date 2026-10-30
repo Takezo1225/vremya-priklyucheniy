@@ -1,0 +1,13 @@
+{
+  "name": "Время приключений",
+  "short_name": "Время",
+  "description": "Русскоязычная обучающая игра о времени для детей",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#bdeeff",
+  "theme_color": "#6457e8",
+  "icons": []
+}

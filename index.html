@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#6457e8">
+<title>Время приключений</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--ink:#25345b;--violet:#6457e8;--pink:#ff719d;--yellow:#ffd45b;--mint:#6edbb5;--sky:#bfeeff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(155deg,#bdeeff,#f1ddff 56%,#fff0c7);font-family:"Trebuchet MS",system-ui,sans-serif;color:var(--ink)}
+button{font:inherit;cursor:pointer;border:0;touch-action:manipulation}.app{max-width:760px;margin:auto;padding:14px 14px 34px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}.brand,.stats{background:#ffffffd9;border:2px solid white;border-radius:99px;padding:9px 13px;font-weight:900}
+h1{text-align:center;font-size:clamp(32px,8vw,49px);line-height:1.03;color:#574bd0;margin:23px 0 6px;text-shadow:2px 3px white}
+.sub{text-align:center;font-weight:800;margin:0 0 18px;font-size:17px}
+.hero{position:relative;overflow:hidden;background:linear-gradient(145deg,#fff,#fff8df);border:3px solid white;border-radius:30px;padding:17px;text-align:center;box-shadow:0 8px 0 #6557e822}
+.hero:before,.hero:after{content:"✨";position:absolute;font-size:28px}.hero:before{left:12px;top:15px}.hero:after{right:15px;bottom:15px}
+.fox{font-size:75px;line-height:1.15;filter:drop-shadow(0 4px 0 #e9d9ff)}
+.speech{font-size:19px;font-weight:900;line-height:1.35;margin:8px auto;max-width:520px}
+.primary,.secondary{border-radius:18px;padding:14px 18px;font-weight:1000;box-shadow:0 5px 0 #26345b20}
+.primary{background:var(--violet);color:white;width:100%;font-size:20px;margin-top:8px}
+.secondary{background:white;color:var(--ink);border:2px solid #e6e1ff}
+.section{margin-top:17px;background:#ffffffdc;border:3px solid white;border-radius:25px;padding:16px;box-shadow:0 6px 0 #26345b16}
+.section h2{margin:0 0 12px;color:#574bd0;font-size:24px}
+.path{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.level{min-height:115px;text-align:left;padding:12px;border-radius:19px;background:linear-gradient(145deg,#fff,#f5f2ff);border:2px solid white;box-shadow:0 4px 0 #6557e81c;color:var(--ink)}
+.level:disabled{opacity:.5;filter:grayscale(.5)}.level .ico{font-size:29px}.level b{display:block;font-size:16px;margin:4px 0}.level small{color:#6b7592;font-weight:700}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.action{background:#fff;border:2px solid white;border-radius:18px;padding:13px 8px;font-weight:900;color:#5146bf;box-shadow:0 4px 0 #26345b18}
+.tap{cursor:pointer;text-decoration:underline dotted;text-underline-offset:5px}
+.hint{text-align:center;color:#697491;font-weight:700;font-size:14px}
+.hidden{display:none!important}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.panel{background:#ffffffed;border:3px solid white;border-radius:25px;padding:17px;margin-top:14px;box-shadow:0 6px 0 #26345b18}
+.panel h2{color:#574bd0;margin:0 0 10px;font-size:24px}
+.lesson-title{text-align:center;font-size:25px;font-weight:1000;color:#df4f91;margin:8px 0}
+.clockbox{display:flex;justify-content:center;margin:14px 0}
+.clock{width:min(70vw,285px);aspect-ratio:1;position:relative;border-radius:50%;background:radial-gradient(circle,#fff 66%,#fff8d8 67%);border:11px solid #ffd45b;box-shadow:inset 0 0 0 4px #ffecaa,0 6px 0 #26345b20}
+.clocknum{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:clamp(19px,5vw,25px);font-weight:1000;width:32px;text-align:center}
+.hand{position:absolute;left:50%;bottom:50%;transform-origin:50% 100%;border-radius:10px;pointer-events:none}
+.hour{height:27%;width:10px;background:#6255e7}.minute{height:39%;width:6px;background:#ff6696}
+.pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border:3px solid white;border-radius:50%;background:#27345b;z-index:3}
+.digital{background:#e3fff3;color:#168c69;border-radius:16px;text-align:center;font-size:39px;font-weight:1000;padding:8px;max-width:220px;margin:10px auto}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.control{background:#f0edff;border:2px solid white;border-radius:17px;padding:10px;text-align:center;font-weight:900}
+.control button{display:inline-grid;place-items:center;width:43px;height:40px;border-radius:13px;background:white;color:#574bd0;font-size:24px;font-weight:1000;margin:5px 4px 0}
+.answers{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:13px}
+.answer{border:3px solid #e6e1ff;border-radius:17px;background:white;color:#5146bf;padding:13px 8px;font-size:22px;font-weight:1000;box-shadow:0 4px 0 #26345b16}
+.answer:disabled{opacity:.55}
+.feedback{text-align:center;font-size:19px;font-weight:1000;min-height:30px;margin:12px 0}
+.progress{height:10px;background:#eeeaff;border-radius:99px;overflow:hidden}.progress>span{display:block;height:100%;background:linear-gradient(90deg,#6edbb5,#6457e8)}
+.footer{text-align:center;font-size:12px;color:#6b7592;margin-top:18px}
+@media(max-width:390px){.path{gap:8px}.level{padding:10px}.brand{font-size:13px}.stats{font-size:13px}}
+</style>
+</head>
+<body><div class="app">
+<header class="top"><div class="brand">🚀 ВРЕМЯ ПРИКЛЮЧЕНИЙ</div><button class="secondary" id="sound">🔊 Звук: вкл.</button></header>
+<main id="home">
+<h1>Время приключений!</h1><p class="sub">Учимся понимать часы вместе с Тик-Таком</p>
+<section class="hero"><div class="fox">🦊⏰</div><p class="speech tap" data-say="Привет! Я Тик-Так. Давай отправимся в путешествие и научимся узнавать время!">Привет! Я Тик-Так. Давай отправимся в путешествие и научимся узнавать время!</p><button class="primary" id="continue">▶ Продолжить приключение</button><p class="hint">Нажимай на слова — я прочитаю их вслух!</p></section>
+<section class="section"><h2>🌈 Карта приключений</h2><div class="progress"><span id="progressbar" style="width:0%"></span></div><p class="hint" id="progresslabel">Начни с первого уровня!</p><div class="path" id="levels"></div></section>
+<div class="actions"><button class="action" id="practice">🕰️ Мастерская часов</button><button class="action" id="achievements">🏅 Мои награды</button></div>
+<section class="section hidden" id="awardbox"><h2>Мои успехи ⭐</h2><p id="awardtext"></p><button class="secondary" id="closeAwards">Закрыть</button></section>
+<section class="section"><p class="hint">Для родителей: прогресс сохраняется на этом устройстве.</p><button class="secondary" id="reset">Сбросить прогресс</button></section>
+</main>
+<main id="study" class="hidden">
+<div class="bar"><button class="secondary" id="back">← На карту</button><span class="stats" id="levelnum">Уровень 1</span></div>
+<section class="panel"><div class="fox" style="text-align:center">🦊</div><h2 id="title" class="lesson-title"></h2><p class="speech tap" id="intro"></p><p id="detail" class="tap"></p><p class="hint">Нажми на текст, чтобы услышать объяснение.</p><div id="task"></div><div class="feedback" id="feedback"></div><button class="primary" id="next">Начать задание →</button></section>
+</main>
+<main id="workshop" class="hidden">
+<div class="bar"><button class="secondary" id="workback">← На карту</button><span class="stats">Мастерская часов</span></div>
+<section class="panel"><h2>🕰️ Поиграй со стрелками!</h2><p class="hint tap" data-say="Передвигай стрелки кнопками. Короткая стрелка показывает часы, длинная — минуты.">Передвигай стрелки кнопками. Короткая стрелка показывает часы, длинная — минуты.</p><div class="clockbox"><div class="clock" id="practiceClock"></div></div><div class="digital" id="digital">03:00</div><div class="controls"><div class="control">Короткая стрелка<br><button id="hourDown">−</button><button id="hourUp">+</button></div><div class="control">Длинная стрелка<br><button id="minDown">−</button><button id="minUp">+</button></div></div><p class="hint" id="clockWords">Сейчас три часа ровно.</p><button class="primary" id="randomClock">🎲 Дай мне задание!</button><div class="feedback" id="workFeedback"></div></section>
+</main>
+<p class="footer">Игра для дошкольников · Русский язык · Сохранение прогресса</p>
+</div>
+<script>
+const units=[
+{t:"Что такое время?",e:"🌞",i:"Время помогает нам знать, когда просыпаться, гулять, кушать и отдыхать.",d:"Утром мы просыпаемся. Днём играем и гуляем. Вечером готовимся ко сну. Ночью спим.",q:"Когда мы обычно спим?",a:["Утром","Ночью","Днём","За завтраком"],c:1,x:"Правильно! Ночью мы обычно спим."},
+{t:"Знакомство с часами",e:"⏰",i:"Часы помогают узнать, который сейчас час. На циферблате есть цифры от одного до двенадцати.",d:"Короткая стрелка показывает часы. Длинная стрелка показывает минуты.",q:"Какая стрелка показывает часы?",a:["Короткая","Длинная"],c:0,x:"Верно! Короткая стрелка показывает часы."},
+{t:"Учимся узнавать целый час",e:"🕒",i:"Когда длинная минутная стрелка смотрит на двенадцать, наступил ровно целый час.",d:"Короткая стрелка показывает три, а длинная стоит на двенадцати. Это три часа — 03:00.",clock:[3,0],q:"Который час показывают часы?",a:["03:00","06:00","12:30","09:00"],c:0,x:"Молодец! Это три часа — 03:00."},
+{t:"В сутках 24 часа",e:"🌗",i:"В одних сутках двадцать четыре часа. После двенадцати часов дня начинается тринадцатый час.",d:"Три часа дня — 15:00. А три часа ночи — 03:00. Число помогает понять, какое это время суток.",q:"Как записать три часа дня?",a:["03:00","15:00","12:03","30:00"],c:1,x:"Правильно! Три часа дня — это 15:00."},
+{t:"Знакомимся с минутами",e:"⏳",i:"В одном часе шестьдесят минут. Тридцать минут — это половина часа.",d:"Когда минутная стрелка стоит на шести, прошло тридцать минут. Например, 06:30.",q:"Сколько минут в половине часа?",a:["10","15","30","60"],c:2,x:"Верно! Половина часа — это 30 минут."},
+{t:"Что такое будильник?",e:"🔔",i:"Будильник — это часы, которые подают сигнал в выбранное нами время.",d:"Чтобы установить будильник, выбери часы, затем минуты и включи сигнал. Здесь мы потренируемся на игровом будильнике.",q:"Для чего нужен будильник?",a:["Поливать цветы","Подать сигнал в нужное время","Измерять рост"],c:1,x:"Точно! Будильник подаёт сигнал в заданное время."},
+{t:"Мой распорядок дня",e:"📅",i:"Распорядок дня помогает помнить, когда просыпаться, кушать, гулять и отдыхать.",d:"У каждого дела есть своё время. Утром завтракаем, днём гуляем, вечером готовимся ко сну.",q:"Что обычно бывает утром?",a:["Завтрак","Сон ночью","Ужин"],c:0,x:"Молодец! Завтрак часто бывает утром."},
+{t:"Большое путешествие",e:"🏆",i:"Ты уже многое знаешь! Давай вспомним часы, минуты, сутки и будильник.",d:"В финале нужно применить все знания. Слушай внимательно и не спеши!",q:"Сколько часов в сутках?",a:["12","24","60","100"],c:1,x:"Ура! В сутках 24 часа. Ты настоящий знаток времени!"}
+];
+let data;try{data=JSON.parse(localStorage.getItem("vremyaAdventure")||"null")}catch(e){}
+if(!data)data={open:1,done:[],stars:0,last:1};
+let soundOn=true,idx=1,stage="intro",hh=3,mm=0,challenge=null;
+const el=id=>document.getElementById(id);
+function save(){localStorage.setItem("vremyaAdventure",JSON.stringify(data));drawMap()}
+function say(t){if(!soundOn||!("speechSynthesis"in window))return;speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang="ru-RU";u.rate=.88;u.pitch=1.08;let v=speechSynthesis.getVoices().find(v=>v.lang.toLowerCase().startsWith("ru"));if(v)u.voice=v;speechSynthesis.speak(u)}
+document.addEventListener("click",ev=>{let x=ev.target.closest("[data-say]");if(x)say(x.dataset.say)});
+el("sound").onclick=()=>{soundOn=!soundOn;el("sound").textContent=soundOn?"🔊 Звук: вкл.":"🔇 Звук: выкл.";if(!soundOn&&"speechSynthesis"in window)speechSynthesis.cancel()};
+function clockDraw(target,h,m){if(!target)return;let s="";for(let n=1;n<=12;n++){let a=n*Math.PI/6,x=50+39*Math.sin(a),y=50-39*Math.cos(a);s+=`<span class="clocknum" style="left:${x}%;top:${y}%">${n}</span>`}s+=`<div class="hand hour" style="transform:translateX(-50%) rotate(${(h%12)*30+m*.5}deg)"></div><div class="hand minute" style="transform:translateX(-50%) rotate(${m*6}deg)"></div><div class="pin"></div>`;target.innerHTML=s}
+function drawMap(){el("levels").innerHTML=units.map((u,k)=>{let n=k+1,done=data.done.includes(n),open=n<=data.open;return `<button class="level" data-n="${n}" ${open?"":"disabled"}><span class="ico">${done?"🏅":open?u.e:"🔒"}</span><b>${n}. ${u.t}</b><small>${done?"Уровень пройден":open?"Нажми, чтобы начать":"Сначала пройди прошлый уровень"}</small></button>`}).join("");let p=data.done.length/8*100;el("progressbar").style.width=p+"%";el("progresslabel").textContent=`Пройдено ${data.done.length} из 8 уровней · ⭐ ${data.stars}`}
+function show(which){["home","study","workshop"].forEach(x=>el(x).classList.toggle("hidden",x!==which))}
+function begin(n){idx=n;data.last=n;save();show("study");el("levelnum").textContent="Уровень "+n;el("title").textContent=units[n-1].e+" "+units[n-1].t;intro()}
+function intro(){let u=units[idx-1];stage="intro";el("intro").textContent="Сначала вспомним! "+u.i;el("intro").dataset.say="Сначала вспомним! "+u.i;el("detail").textContent=u.d;el("detail").dataset.say=u.d;el("task").innerHTML="";el("feedback").textContent="";el("next").textContent="Перейти к заданию →";say("Сначала вспомним! "+u.i)}
+function quiz(){let u=units[idx-1];stage="quiz";el("intro").textContent=u.q;el("intro").dataset.say=u.q;el("detail").textContent="Выбери правильный ответ.";el("detail").dataset.say="Выбери правильный ответ.";el("task").innerHTML=(u.clock?'<div class="clockbox"><div class="clock" id="questionClock"></div></div>':"")+`<div class="answers">${u.a.map((a,k)=>`<button class="answer" data-a="${k}">${a}</button>`).join("")}</div>`;if(u.clock)clockDraw(el("questionClock"),...u.clock);el("feedback").textContent="";el("next").disabled=true;el("next").textContent="Завершить уровень";say(u.q)}
+function success(){let u=units[idx-1];stage="done";if(!data.done.includes(idx)){data.done.push(idx);data.stars+=3;data.open=Math.max(data.open,Math.min(8,idx+1))}save();el("intro").textContent="Ура! Уровень пройден!";el("intro").dataset.say="Ура! Уровень пройден! Ты получил три звезды!";el("detail").textContent=u.x;el("detail").dataset.say=u.x;el("task").innerHTML='<div class="fox" style="text-align:center">🎉⭐🏅</div><p class="speech">Ты большой молодец!</p>';el("feedback").textContent="Ты заработал 3 звезды!";el("next").disabled=false;el("next").textContent=idx<8?"Следующий уровень →":"На карту приключений";say("Молодец! "+u.x)}
+el("levels").addEventListener("click",e=>{let b=e.target.closest("[data-n]");if(b)begin(+b.dataset.n)});
+el("continue").onclick=()=>begin(Math.min(data.last||data.open,data.open));
+el("next").onclick=()=>{if(stage==="intro")quiz();else if(stage==="quiz"){if(!el("next").disabled)success()}else if(stage==="done"){if(idx<8&&data.open>idx)begin(idx+1);else show("home")}};
+el("task").addEventListener("click",e=>{let b=e.target.closest("[data-a]");if(!b||stage!=="quiz")return;let u=units[idx-1],ans=+b.dataset.a;if(ans===u.c){el("feedback").textContent="Правильно! ⭐";el("feedback").style.color="#15966e";el("next").disabled=false;say(u.x)}else{b.disabled=true;el("feedback").textContent="Почти! Попробуй ещё раз.";el("feedback").style.color="#df4f91";say("Почти получилось. Попробуй ещё раз!") }});
+el("back").onclick=()=>show("home");
+el("practice").onclick=()=>{show("workshop");updateClock()};
+el("workback").onclick=()=>show("home");
+function updateClock(){clockDraw(el("practiceClock"),hh,mm);el("digital").textContent=String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0");let hword=hh===1?"час":hh>=2&&hh<=4?"часа":"часов";let mword=mm===1?"минута":mm>=2&&mm<=4?"минуты":"минут";el("clockWords").textContent=mm===0?`Сейчас ${hh} ${hword} ровно.`:`Сейчас ${hh} ${hword} ${mm} ${mword}.`}
+el("hourUp").onclick=()=>{hh=hh%24+1;updateClock()};el("hourDown").onclick=()=>{hh=(hh+22)%24+1;updateClock()};el("minUp").onclick=()=>{mm=(mm+5)%60;updateClock()};el("minDown").onclick=()=>{mm=(mm+55)%60;updateClock()};
+el("randomClock").onclick=()=>{challenge={h:Math.floor(Math.random()*24),m:[0,15,30,45][Math.floor(Math.random()*4)]};hh=challenge.h||12;mm=challenge.m;updateClock();el("workFeedback").textContent="Поставь стрелки на время: "+String(challenge.h).padStart(2,"0")+":"+String(challenge.m).padStart(2,"0");say("Попробуй выставить время "+challenge.h+" часов "+challenge.m+" минут.")};
+el("achievements").onclick=()=>{el("awardbox").classList.remove("hidden");el("awardtext").textContent=`Пройдено уровней: ${data.done.length} из 8. Звёзды: ${data.stars}. Продолжай учиться!`};
+el("closeAwards").onclick=()=>el("awardbox").classList.add("hidden");
+el("reset").onclick=()=>{if(confirm("Для родителей: удалить все результаты и начать сначала?")){data={open:1,done:[],stars:0,last:1};save()}};
+drawMap();updateClock();
+if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+</script></body></html>
