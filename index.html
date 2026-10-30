@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ru">
 <head>
@@ -115,7 +116,7 @@ h1{text-align:center;font-size:clamp(32px,8vw,49px);line-height:1.03;color:#574b
     <button class="secondary" id="testVoice">▶ Послушать голос</button>
     <button class="secondary" id="refreshVoices">↻ Обновить голоса</button>
   </div>
-  <p class="voice-note" id="voiceNote">Голоса зависят от настроек устройства. Если русского голоса нет в списке, проверь настройки речи телефона.</p>
+  <p class="voice-note" id="voiceNote">Голоса зависят от настроек устройства. Выбранный голос сохраняется на этом устройстве.</p>
 </section>
 
 <section class="section hidden" id="awardbox">
@@ -189,35 +190,59 @@ if(!data)data={open:1,done:[],stars:0,last:1};
 let soundOn=true,idx=1,stage="intro",hh=3,mm=0,challenge=null;
 const el=id=>document.getElementById(id);
 
-/* Настройки голоса */
-let voiceSettings={voice:"auto",rate:1};
+/* Настройки голоса — сохранение и восстановление */
+let voiceSettings={voice:"auto",voiceName:"",voiceLang:"",rate:1};
+
 try{
   const saved=JSON.parse(localStorage.getItem("vremyaVoiceSettings")||"null");
   if(saved){
     voiceSettings.voice=saved.voice||"auto";
+    voiceSettings.voiceName=saved.voiceName||"";
+    voiceSettings.voiceLang=saved.voiceLang||"";
     voiceSettings.rate=Number(saved.rate)||1;
   }
 }catch(e){}
 
 let availableVoices=[];
+let voicesLoaded=false;
 
 function saveVoiceSettings(){
-  try{localStorage.setItem("vremyaVoiceSettings",JSON.stringify(voiceSettings))}catch(e){}
+  try{
+    localStorage.setItem("vremyaVoiceSettings",JSON.stringify(voiceSettings));
+  }catch(e){}
 }
 
 function refreshVoices(){
   if(!("speechSynthesis" in window)){
-    el("voiceNote").textContent="К сожалению, этот браузер не поддерживает голосовое чтение.";
-    el("voiceSelect").innerHTML='<option value="auto">Голосовое чтение недоступно</option>';
+    el("voiceNote").textContent="Этот браузер не поддерживает голосовое чтение.";
     return;
   }
 
   availableVoices=speechSynthesis.getVoices()||[];
-  const russian=availableVoices.filter(v=>(v.lang||"").toLowerCase().startsWith("ru"));
+
+  const russian=availableVoices.filter(v=>
+    (v.lang||"").toLowerCase().startsWith("ru")
+  );
+
+  if(availableVoices.length>0)voicesLoaded=true;
+
+  if(voiceSettings.voice!=="auto"&&!russian.some(v=>v.voiceURI===voiceSettings.voice)){
+    const sameVoice=russian.find(v=>
+      v.name===voiceSettings.voiceName &&
+      v.lang===voiceSettings.voiceLang
+    );
+
+    if(sameVoice){
+      voiceSettings.voice=sameVoice.voiceURI;
+      saveVoiceSettings();
+    }
+  }
+
   const select=el("voiceSelect");
   const previous=voiceSettings.voice;
 
   select.innerHTML="";
+
   const automatic=document.createElement("option");
   automatic.value="auto";
   automatic.textContent="Автоматический русский голос";
@@ -230,28 +255,42 @@ function refreshVoices(){
     select.appendChild(option);
   });
 
-  if(previous!=="auto"&&russian.some(v=>v.voiceURI===previous)){
-    select.value=previous;
-  }else{
-    select.value="auto";
-    voiceSettings.voice="auto";
-    saveVoiceSettings();
+  if(previous!=="auto"&&!russian.some(v=>v.voiceURI===previous)){
+    const waiting=document.createElement("option");
+    waiting.value=previous;
+    waiting.textContent=voiceSettings.voiceName
+      ? voiceSettings.voiceName+" (ожидает загрузки)"
+      : "Сохранённый голос (ожидает загрузки)";
+    select.appendChild(waiting);
   }
 
-  el("voiceNote").textContent=russian.length
-    ? "Найдено русских голосов: "+russian.length+". Выбери тот, который тебе больше нравится."
-    : "Русские голоса пока не найдены. Попробуй нажать «Обновить голоса» или проверь настройки речи устройства.";
+  select.value=previous;
+
+  if(select.value!==previous){
+    select.value="auto";
+  }
+
+  if(russian.length){
+    el("voiceNote").textContent=
+      "Найдено русских голосов: "+russian.length+
+      ". Твой выбор сохраняется автоматически.";
+  }else{
+    el("voiceNote").textContent=
+      "Ожидаем загрузки русских голосов устройства. Сохранённый выбор не будет потерян.";
+  }
 }
 
 function updateRateLabel(){
-  el("rateValue").textContent=Number(voiceSettings.rate).toFixed(2).replace(/0$/,"").replace(/\.0$/,".0");
+  el("rateValue").textContent=
+    Number(voiceSettings.rate).toFixed(2).replace(/0$/,"").replace(/\.0$/,".0");
   el("voiceRate").value=voiceSettings.rate;
 }
 
 function say(t,mood="normal"){
   if(!soundOn||!("speechSynthesis" in window)||!t)return;
 
-  speechSynthesis.cancel();
+  const voices=speechSynthesis.getVoices()||[];
+  availableVoices=voices;
 
   const utterance=new SpeechSynthesisUtterance(t);
   utterance.lang="ru-RU";
@@ -266,31 +305,63 @@ function say(t,mood="normal"){
     utterance.pitch=1.1;
   }
 
-  const voices=speechSynthesis.getVoices()||[];
   let voice=null;
 
   if(voiceSettings.voice!=="auto"){
     voice=voices.find(v=>v.voiceURI===voiceSettings.voice)||null;
+
+    if(!voice&&voiceSettings.voiceName){
+      voice=voices.find(v=>
+        v.name===voiceSettings.voiceName &&
+        v.lang===voiceSettings.voiceLang
+      )||null;
+
+      if(voice){
+        voiceSettings.voice=voice.voiceURI;
+        saveVoiceSettings();
+      }
+    }
   }
 
   if(!voice){
-    voice=voices.find(v=>(v.lang||"").toLowerCase().startsWith("ru"))||null;
+    voice=voices.find(v=>
+      (v.lang||"").toLowerCase().startsWith("ru")
+    )||null;
   }
 
   if(voice)utterance.voice=voice;
 
+  speechSynthesis.cancel();
   speechSynthesis.speak(utterance);
 }
 
-/* Голоса могут загружаться с небольшой задержкой */
+/* Загружаем голоса и ждём, пока устройство их предоставит */
 if("speechSynthesis" in window){
   refreshVoices();
-  speechSynthesis.onvoiceschanged=refreshVoices;
-  setTimeout(refreshVoices,700);
+
+  speechSynthesis.onvoiceschanged=()=>{
+    refreshVoices();
+  };
+
+  setTimeout(refreshVoices,500);
+  setTimeout(refreshVoices,1500);
+  setTimeout(refreshVoices,3000);
 }
 
 el("voiceSelect").onchange=()=>{
-  voiceSettings.voice=el("voiceSelect").value||"auto";
+  const selected=el("voiceSelect").value||"auto";
+  voiceSettings.voice=selected;
+
+  const chosen=availableVoices.find(v=>v.voiceURI===selected);
+
+  if(chosen){
+    voiceSettings.voiceName=chosen.name;
+    voiceSettings.voiceLang=chosen.lang;
+  }else if(selected==="auto"){
+    voiceSettings.voiceName="";
+    voiceSettings.voiceLang="";
+  }
+
   saveVoiceSettings();
   say("Отлично! Давай послушаем, как звучит мой голос.","happy");
 };
