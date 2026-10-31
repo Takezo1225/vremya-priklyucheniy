@@ -1,9 +1,12 @@
-const CACHE = "vremya-adventures-v4";
 
-const FILES = [
+const CACHE_NAME = "vremya-app-v4";
+const VOICE_CACHE = "vremya-voice-audio-v1";
+
+const APP_FILES = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./sw.js",
   "./audio/hello.mp3",
   "./audio/lesson.mp3",
   "./audio/correct.mp3",
@@ -13,65 +16,70 @@ const FILES = [
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE)
-      .then(cache => cache.addAll(FILES))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES))
   );
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys()
-      .then(keys =>
-        Promise.all(
-          keys
-            .filter(key => key !== CACHE)
-            .map(key => caches.delete(key))
-        )
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key =>
+            key !== CACHE_NAME &&
+            key !== VOICE_CACHE
+          )
+          .map(key => caches.delete(key))
       )
-      .then(() => self.clients.claim())
+    ).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", event => {
-  if (event.request.method !== "GET") return;
+  const request = event.request;
 
-  // Для главной страницы сначала получаем свежую версию,
-  // а без интернета открываем сохранённую.
-  if (event.request.mode === "navigate") {
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+
+  if (url.origin !== self.location.origin) return;
+
+  if (request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request)
+      fetch(request)
         .then(response => {
-          if (response && response.ok) {
+          if (response.ok) {
             const copy = response.clone();
-            caches.open(CACHE).then(cache => {
-              cache.put("./index.html", copy);
-            });
+
+            caches.open(CACHE_NAME).then(cache =>
+              cache.put("./index.html", copy)
+            );
           }
+
           return response;
         })
         .catch(() => caches.match("./index.html"))
     );
+
     return;
   }
 
-  // MP3 и остальные ресурсы сначала берём из офлайн-кэша.
   event.respondWith(
-    caches.match(event.request)
-      .then(cached => {
-        if (cached) return cached;
+    caches.match(request).then(cached => {
+      if (cached) return cached;
 
-        return fetch(event.request)
-          .then(response => {
-            if (response && response.ok) {
-              const copy = response.clone();
-              caches.open(CACHE).then(cache => {
-                cache.put(event.request, copy);
-              });
-            }
-            return response;
-          })
-          .catch(() => Response.error());
-      })
+      return fetch(request).then(response => {
+        if (response.ok) {
+          const copy = response.clone();
+
+          caches.open(CACHE_NAME).then(cache =>
+            cache.put(request, copy)
+          );
+        }
+
+        return response;
+      });
+    })
   );
 });
