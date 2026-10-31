@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ru">
 <head>
@@ -19,7 +20,53 @@ h1{text-align:center;font-size:clamp(32px,8vw,49px);line-height:1.03;color:#574b
 .hero{position:relative;overflow:hidden;background:linear-gradient(145deg,#fff,#fff8df);border:3px solid white;border-radius:30px;padding:17px;text-align:center;box-shadow:0 8px 0 #6557e822}
 .hero:before,.hero:after{content:"✨";position:absolute;font-size:28px}
 .hero:before{left:12px;top:15px}.hero:after{right:15px;bottom:15px}
-.fox{font-size:75px;line-height:1.15;filter:drop-shadow(0 4px 0 #e9d9ff)}
+
+/* Анимации Тик-Така */
+.fox{
+  font-size:75px;
+  line-height:1.15;
+  display:inline-block;
+  filter:drop-shadow(0 4px 0 #e9d9ff);
+  transform-origin:50% 85%;
+  animation:foxIdle 2.4s ease-in-out infinite;
+  transition:filter .2s;
+}
+.fox.happy{animation:foxHappy .65s ease-in-out 2}
+.fox.wrong{animation:foxWrong .5s ease-in-out 2}
+.fox.thinking{animation:foxThink 1.2s ease-in-out infinite}
+.fox.welcome{animation:foxWelcome .8s ease-in-out 2}
+.fox.sleepy{animation:foxSleep 2s ease-in-out infinite}
+
+@keyframes foxIdle{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  50%{transform:translateY(-7px) rotate(2deg)}
+}
+@keyframes foxHappy{
+  0%,100%{transform:translateY(0) scale(1) rotate(0)}
+  30%{transform:translateY(-22px) scale(1.12) rotate(-9deg)}
+  60%{transform:translateY(-8px) scale(1.08) rotate(9deg)}
+}
+@keyframes foxWrong{
+  0%,100%{transform:translateX(0) rotate(0)}
+  25%{transform:translateX(-8px) rotate(-8deg)}
+  50%{transform:translateX(8px) rotate(8deg)}
+  75%{transform:translateX(-4px) rotate(-4deg)}
+}
+@keyframes foxThink{
+  0%,100%{transform:translateY(0) rotate(-4deg)}
+  50%{transform:translateY(-5px) rotate(5deg)}
+}
+@keyframes foxWelcome{
+  0%,100%{transform:scale(1) rotate(0)}
+  25%{transform:scale(1.15) rotate(-10deg)}
+  50%{transform:scale(1.08) rotate(10deg)}
+  75%{transform:scale(1.15) rotate(-5deg)}
+}
+@keyframes foxSleep{
+  0%,100%{transform:translateY(0) rotate(0)}
+  50%{transform:translateY(5px) rotate(5deg)}
+}
+
 .speech{font-size:19px;font-weight:900;line-height:1.35;margin:8px auto;max-width:520px}
 .primary,.secondary{border-radius:18px;padding:14px 18px;font-weight:1000;box-shadow:0 5px 0 #26345b20}
 .primary{background:var(--violet);color:white;width:100%;font-size:20px;margin-top:8px}
@@ -267,6 +314,20 @@ if(!data)data={open:1,done:[],stars:0,last:1};
 let soundOn=true,idx=1,stage="intro",hh=3,mm=0,challenge=null;
 const el=id=>document.getElementById(id);
 
+/* Эмоции и реакции Тик-Така */
+function foxMood(mood="idle"){
+  document.querySelectorAll(".fox").forEach(fox=>{
+    fox.classList.remove(
+      "happy","wrong","thinking","welcome","sleepy"
+    );
+
+    if(mood!=="idle"){
+      void fox.offsetWidth;
+      fox.classList.add(mood);
+    }
+  });
+}
+
 /* Настройки голоса — сохранение и восстановление */
 let voiceSettings={voice:"auto",voiceName:"",voiceLang:"",rate:1};
 
@@ -450,11 +511,13 @@ el("voiceRate").oninput=()=>{
 };
 
 el("testVoice").onclick=()=>{
+  foxMood("happy");
   say("Привет! Я Тик-Так! Ура! Давай весело учиться узнавать время!","happy");
 };
 
 el("refreshVoices").onclick=()=>{
   refreshVoices();
+  foxMood("thinking");
   say("Я проверил доступные голоса. Выбирай тот, который тебе нравится!");
 };
 
@@ -492,7 +555,7 @@ function drawMap(){
   el("progresslabel").textContent=`Пройдено ${data.done.length} из 8 уровней · ⭐ ${data.stars}`;
 }
 
-/* Исправлено: теперь переключаются все четыре экрана */
+/* Переключение всех четырёх экранов */
 function show(which){
   ["home","study","workshop","alarm"].forEach(x=>
     el(x).classList.toggle("hidden",x!==which)
@@ -512,6 +575,7 @@ function begin(n){
 function intro(){
   let u=units[idx-1];
   stage="intro";
+  foxMood("welcome");
   el("intro").textContent="Сначала вспомним! "+u.i;
   el("intro").dataset.say="Сначала вспомним! "+u.i;
   el("detail").textContent=u.d;
@@ -526,6 +590,7 @@ function intro(){
 function quiz(){
   let u=units[idx-1];
   stage="quiz";
+  foxMood("thinking");
   el("intro").textContent=u.q;
   el("intro").dataset.say=u.q;
   el("detail").textContent="Выбери правильный ответ.";
@@ -542,6 +607,7 @@ function quiz(){
 function success(){
   let u=units[idx-1];
   stage="done";
+  foxMood("happy");
   if(!data.done.includes(idx)){
     data.done.push(idx);
     data.stars+=3;
@@ -581,13 +647,15 @@ el("task").addEventListener("click",e=>{
   if(!b||stage!=="quiz")return;
   let u=units[idx-1],ans=+b.dataset.a;
   if(ans===u.c){
+    foxMood("happy");
     el("feedback").textContent="Правильно! ⭐";
     el("feedback").style.color="#15966e";
     el("next").disabled=false;
     say("Ура! Правильный ответ! "+u.x,"happy");
   }else{
+    foxMood("wrong");
     b.disabled=true;
-    el("feedback").textContent="Почти! Попробуй ещё раз.";
+    el("feedback").textContent="Почти! Попробуй ещё раз. 🦊";
     el("feedback").style.color="#df4f91";
     say("Ничего страшного! Ты справишься. Попробуй ещё раз!","gentle");
   }
@@ -597,7 +665,9 @@ el("back").onclick=()=>show("home");
 
 el("practice").onclick=()=>{
   show("workshop");
+  foxMood("welcome");
   updateClock();
+  say("Добро пожаловать в мастерскую часов! Давай играть со стрелками!","happy");
 };
 
 el("workback").onclick=()=>show("home");
@@ -612,10 +682,10 @@ function updateClock(){
     :`Сейчас ${hh} ${hword} ${mm} ${mword}.`;
 }
 
-el("hourUp").onclick=()=>{hh=hh%24+1;updateClock()};
-el("hourDown").onclick=()=>{hh=(hh+22)%24+1;updateClock()};
-el("minUp").onclick=()=>{mm=(mm+5)%60;updateClock()};
-el("minDown").onclick=()=>{mm=(mm+55)%60;updateClock()};
+el("hourUp").onclick=()=>{hh=hh%24+1;updateClock();foxMood("happy")};
+el("hourDown").onclick=()=>{hh=(hh+22)%24+1;updateClock();foxMood("thinking")};
+el("minUp").onclick=()=>{mm=(mm+5)%60;updateClock();foxMood("happy")};
+el("minDown").onclick=()=>{mm=(mm+55)%60;updateClock();foxMood("thinking")};
 
 el("randomClock").onclick=()=>{
   challenge={
@@ -625,6 +695,7 @@ el("randomClock").onclick=()=>{
   hh=challenge.h||12;
   mm=challenge.m;
   updateClock();
+  foxMood("thinking");
   el("workFeedback").textContent="Поставь стрелки на время: "+String(challenge.h).padStart(2,"0")+":"+String(challenge.m).padStart(2,"0");
   say("Попробуй выставить время "+challenge.h+" часов "+challenge.m+" минут.","happy");
 };
@@ -632,6 +703,7 @@ el("randomClock").onclick=()=>{
 el("achievements").onclick=()=>{
   el("awardbox").classList.remove("hidden");
   el("awardtext").textContent=`Пройдено уровней: ${data.done.length} из 8. Звёзды: ${data.stars}. Продолжай учиться!`;
+  foxMood("happy");
 };
 
 el("closeAwards").onclick=()=>el("awardbox").classList.add("hidden");
@@ -640,6 +712,7 @@ el("reset").onclick=()=>{
   if(confirm("Для родителей: удалить все результаты и начать сначала?")){
     data={open:1,done:[],stars:0,last:1};
     save();
+    foxMood("welcome");
   }
 };
 
@@ -697,6 +770,7 @@ function updateAlarmTime(){
         alarmDisplay();
 
         el("alarmStatus").textContent="🔔 Просыпайся! Время пришло!";
+        foxMood("happy");
 
         say(
           "Динь-динь! Динь-динь! Просыпайся! Я Тик-Так! Ты молодец!",
@@ -754,6 +828,7 @@ el("openAlarm").onclick=()=>{
   show("alarm");
   alarmDisplay();
   updateAlarmTime();
+  foxMood("welcome");
   say("Добро пожаловать в будильник!","happy");
 };
 
@@ -763,24 +838,28 @@ el("alarmHourUp").onclick=()=>{
   alarmData.hour=(alarmData.hour+1)%24;
   saveAlarm();
   alarmDisplay();
+  foxMood("happy");
 };
 
 el("alarmHourDown").onclick=()=>{
   alarmData.hour=(alarmData.hour+23)%24;
   saveAlarm();
   alarmDisplay();
+  foxMood("thinking");
 };
 
 el("alarmMinUp").onclick=()=>{
   alarmData.minute=(alarmData.minute+1)%60;
   saveAlarm();
   alarmDisplay();
+  foxMood("happy");
 };
 
 el("alarmMinDown").onclick=()=>{
   alarmData.minute=(alarmData.minute+59)%60;
   saveAlarm();
   alarmDisplay();
+  foxMood("thinking");
 };
 
 el("alarmToggle").onclick=()=>{
@@ -795,7 +874,10 @@ el("alarmToggle").onclick=()=>{
       alarmData.lastRing="";
     }
 
+    foxMood("happy");
     say("Будильник включён! Я обязательно напомню!","happy");
+  }else{
+    foxMood("thinking");
   }
 
   saveAlarm();
@@ -806,6 +888,7 @@ el("alarmStop").onclick=()=>{
   alarmData.enabled=false;
   saveAlarm();
   alarmDisplay();
+  foxMood("sleepy");
   say("Будильник выключен. До новых встреч!","gentle");
 };
 
@@ -835,6 +918,7 @@ el("sound").onclick=()=>{
 
   if(soundOn){
     say("Ура! Тик-Так снова с тобой!","happy");
+    foxMood("happy");
   }
 };
 
