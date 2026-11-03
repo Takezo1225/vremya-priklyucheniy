@@ -1,13 +1,28 @@
+
 {
+  "id": "./",
   "name": "Время приключений",
-  "short_name": "Время",
-  "description": "Русскоязычная обучающая игра о времени для детей",
+  "short_name": "Время приключений",
+  "description": "Весёлая обучающая игра о времени для детей 5–6 лет с лисёнком Тик-Так.",
   "lang": "ru",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#bdeeff",
-  "theme_color": "#6457e8",
-  "icons": []
+  "background_color": "#0D2370",
+  "theme_color": "#1678D2",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
