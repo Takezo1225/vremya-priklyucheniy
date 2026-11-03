@@ -1,0 +1,30 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Генератор голоса Тик-Така</title>
+<style>body{font:17px Arial;background:#f4f5ff;padding:20px;color:#24243a}main{max-width:650px;margin:auto;background:white;padding:22px;border-radius:18px}button{width:100%;padding:15px;margin:12px 0;background:#6255d9;color:white;border:0;border-radius:12px;font-size:17px}progress{width:100%}#status{white-space:pre-wrap;background:#f2f1ff;padding:12px;border-radius:10px}</style>
+<main><h2>🦊 Генератор голоса Тик-Така</h2><p>Создаёт MP3 голосом Sofia-Pleasant и собирает ZIP-архив для игры «Время приключений».</p><p>Нужен интернет. Генерация расходует лимит ElevenLabs. Не закрывайте страницу до завершения.</p><button id="go">Создать аудиофайлы</button><progress id="p" value="0" max="1"></progress><p id="status">Готово к запуску.</p><button id="dl" disabled>Скачать ZIP</button></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script><script>
+const endpoint="https://vremya-voice.vovan122595.workers.dev/tts";
+const units=[
+["Время помогает нам знать, когда просыпаться, гулять, кушать и отдыхать.","Утром мы просыпаемся. Днём играем и гуляем. Вечером готовимся ко сну. Ночью спим.","Когда мы обычно спим?","Правильно! Ночью мы обычно спим."],
+["Часы помогают узнать, который сейчас час. На циферблате есть цифры от одного до двенадцати.","Короткая стрелка показывает часы. Длинная стрелка показывает минуты.","Какая стрелка показывает часы?","Верно! Короткая стрелка показывает часы."],
+["Когда длинная минутная стрелка смотрит на двенадцать, наступил ровно целый час.","Короткая стрелка показывает три, а длинная стоит на двенадцати. Это три часа — 03:00.","Который час показывают часы?","Молодец! Это три часа — 03:00."],
+["В одних сутках двадцать четыре часа. После двенадцати часов дня начинается тринадцатый час.","Три часа дня — 15:00. А три часа ночи — 03:00. Число помогает понять, какое это время суток.","Как записать три часа дня?","Правильно! Три часа дня — это 15:00."],
+["В одном часе шестьдесят минут. Тридцать минут — это половина часа.","Когда минутная стрелка стоит на шести, прошло тридцать минут. Например, 06:30.","Сколько минут в половине часа?","Верно! Половина часа — это 30 минут."],
+["Будильник — это часы, которые подают сигнал в выбранное нами время.","Чтобы установить будильник, выбери часы, затем минуты и включи сигнал. Здесь мы потренируемся на игровом будильнике.","Для чего нужен будильник?","Точно! Будильник подаёт сигнал в заданное время."],
+["Распорядок дня помогает помнить, когда просыпаться, кушать, гулять и отдыхать.","У каждого дела есть своё время. Утром завтракаем, днём гуляем, вечером готовимся ко сну.","Что обычно бывает утром?","Молодец! Завтрак часто бывает утром."],
+["Ты уже многое знаешь! Давай вспомним часы, минуты, сутки и будильник.","В финале нужно применить все знания. Слушай внимательно и не спеши!","Сколько часов в сутках?","Ура! В сутках 24 часа. Ты настоящий знаток времени!"]];
+function collect(){let s=new Set(),a=t=>{t=String(t||"").trim();if(t)s.add(t)};
+["Отлично! Давай послушаем, как звучит мой голос.","Привет! Я Тик-Так! Ура! Давай весело учиться узнавать время!","Я проверил доступные голоса. Выбирай тот, который тебе нравится!","Привет! Я Тик-Так. Давай отправимся в путешествие и научимся узнавать время!","Добро пожаловать в мастерскую часов! Давай играть со стрелками!","Динь-динь! Динь-динь! Просыпайся! Я Тик-Так! Ты молодец!","Добро пожаловать в будильник!","Будильник включён! Я обязательно напомню!","Будильник выключен. До новых встреч!","Ура! Тик-Так снова с тобой!","Ничего страшного! Ты справишься. Попробуй ещё раз!"].forEach(a);
+units.forEach(([i,d,q,x])=>[i,d,q,x,"Привет, путешественник! Сначала вспомним! "+i,"А теперь задание! "+q,"Ура! Правильный ответ! "+x,"Ура-а-а! Ты справился! "+x+" Ты заработал три звезды!"].forEach(a));
+for(let h=0;h<24;h++)for(let m of [0,15,30,45])a("Попробуй выставить время "+h+" часов "+m+" минут.");return [...s]}
+let blob=null;const $=id=>document.getElementById(id);
+$("go").onclick=async()=>{ $("go").disabled=true;$("dl").disabled=true;try{
+if(!window.JSZip)throw Error("Не загрузилась библиотека ZIP. Обновите страницу.");
+let texts=collect(),zip=new JSZip(),map={};$("p").max=texts.length;$("p").value=0;$("status").textContent="Всего реплик: "+texts.length+". Генерирую…";
+for(let i=0;i<texts.length;i+=4){let batch=texts.slice(i,i+4),data=null;
+for(let attempt=1;attempt<=3;attempt++){try{let r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({texts:batch})});if(!r.ok)throw Error("Ошибка Worker: "+r.status+" "+(await r.text()).slice(0,120));data=await r.json();if(!Array.isArray(data.audio)||data.audio.length!==batch.length)throw Error("Неверный формат ответа Worker");break}catch(e){if(attempt===3)throw e;await new Promise(r=>setTimeout(r,1500*attempt))}}
+for(let j=0;j<batch.length;j++){let n=i+j+1,name="audio/voices/"+String(n).padStart(3,"0")+".mp3",raw=atob(data.audio[j]),bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));zip.file(name,bytes);map[batch[j]]=name}
+$("p").value=Math.min(i+4,texts.length);$("status").textContent="Создано "+$("p").value+" из "+texts.length+" файлов…"}
+zip.file("audio/voice-map.json",JSON.stringify(map,null,2));zip.file("audio/README.txt","Скопируйте папку audio целиком в корень репозитория рядом с index.html и sw.js.");$("status").textContent="Собираю ZIP…";blob=await zip.generateAsync({type:"blob",compression:"STORE"});$("dl").disabled=false;$("status").textContent="Готово! MP3: "+texts.length+". Нажмите «Скачать ZIP»."
+}catch(e){$("status").textContent="Ошибка: "+e.message+"\nПроверьте публикацию Worker и откройте страницу с GitHub Pages."}finally{$("go").disabled=false}};
+$("dl").onclick=()=>{if(!blob)return;let u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="vremya-adventures-audio.zip";a.click();setTimeout(()=>URL.revokeObjectURL(u),30000)};
+</script></html>
